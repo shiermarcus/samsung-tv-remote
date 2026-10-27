@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-black">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Samsung Smart Remote</title>
+
+  <!-- iOS Standalone Web App Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="TV Remote" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#020617" />
+
+  <!-- Embedded Web Manifest (Data URI) -->
+  <link rel="manifest"
+    href="data:application/manifest+json,%7B%22name%22%3A%22Samsung%20Smart%20TV%20Remote%22%2C%22short_name%22%3A%22TV%20Remote%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23020617%22%2C%22theme_color%22%3A%22%23020617%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%2520viewBox%3D%270%200%20512%20512%27%253E%253Crect%2520width%3D%27512%27%2520height%3D%27512%27%2520rx%3D%27128%27%2520fill%3D%27%230f172a%27%2F%253E%253Crect%2520x%3D%2764%27%2520y%3D%27128%27%2520width%3D%27384%27%2520height%3D%27256%27%2520rx%3D%2724%27%2520fill%3D%27none%27%2520stroke%3D%27%2306b6d4%27%2520stroke-width%3D%2724%27%2F%253E%253Cpath%2520d%3D%27M192%20384h128M256%20384v48%27%2520stroke%3D%27%2306b6d4%27%2520stroke-width%3D%2724%27%2520stroke-linecap%3D%27round%27%2F%253E%253Ccircle%2520cx%3D%27256%27%2520cy%3D%27256%27%2520r%3D%2732%27%2520fill%3D%27%2306b6d4%27%2F%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D" />
+
+  <!-- Apple Touch Icon (SVG Data URI) -->
+  <link rel="apple-touch-icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%230f172a'/%3E%3Crect x='64' y='128' width='384' height='256' rx='24' fill='none' stroke='%2306b6d4' stroke-width='24'/%3E%3Cpath d='M192 384h128M256 384v48' stroke='%2306b6d4' stroke-width='24' stroke-linecap='round'/%3E%3Ccircle cx='256' cy='256' r='32' fill='%2306b6d4'/%3E%3C/svg%3E" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          boxShadow: {
+            'glow-cyan': '0 0 20px -3px rgba(6, 182, 212, 0.4)',
+            'glow-red': '0 0 20px -3px rgba(239, 68, 68, 0.5)',
+            'remote-btn': 'inset 0 1px 1px rgba(255,255,255,0.12), 0 4px 10px rgba(0,0,0,0.5)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .btn-remote {
+      transition: all 0.08s cubic-bezier(0.4, 0, 0.2, 1);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .btn-remote:active,
+    .btn-remote.active {
+      transform: scale(0.93);
+      box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.8), 0 1px 2px rgba(255, 255, 255, 0.05) !important;
+      filter: brightness(0.85);
+    }
+  </style>
+</head>
+
+<body
+  class="h-full flex flex-col font-sans antialiased bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black text-slate-100 overflow-x-hidden select-none">
+
+  <!-- Minimal Header Banner -->
+  <header
+    class="w-full max-w-lg mx-auto px-4 py-3 flex items-center justify-between border-b border-slate-800/80 bg-slate-900/40 backdrop-blur-md sticky top-0 z-40">
+    <div class="flex items-center gap-2.5">
+      <div
+        class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-glow-cyan">
+        <i class="ph-bold ph-tv text-lg"></i>
+      </div>
+      <h1 class="font-bold text-sm tracking-wide text-white">
+        SAMSUNG REMOTE
+      </h1>
+    </div>
+
+    <!-- Status Badge -->
+    <span id="status-badge"
+      class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700/50">
+      <span id="status-dot" class="w-2 h-2 rounded-full bg-slate-500"></span>
+      <span id="status-text">Offline</span>
+    </span>
+  </header>
+
+  <!-- Main Remote Viewport -->
+  <main class="flex-1 w-full max-w-lg mx-auto p-4 space-y-4 pb-8">
+
+    <!-- Connection Config Card -->
+    <section
+      class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-3.5 backdrop-blur-xl shadow-xl space-y-2.5">
+      <div class="grid grid-cols-12 gap-2">
+        <div class="col-span-7 sm:col-span-8">
+          <input type="text" id="tv-ip" placeholder="TV IP (192.168.1.X)"
+            class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition font-mono" />
+        </div>
+        <div class="col-span-5 sm:col-span-4">
+          <select id="tv-port"
+            class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-2 text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-cyan-500 transition font-mono">
+            <option value="8002" selected>8002 (WSS)</option>
+            <option value="8001">8001 (WS)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <button id="connect-btn"
+          class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 active:scale-98 text-white font-medium py-2 px-4 rounded-xl shadow-glow-cyan text-xs sm:text-sm flex items-center justify-center gap-2 transition">
+          <i class="ph-bold ph-plug"></i> Connect to TV
+        </button>
+        <button id="disconnect-btn"
+          class="hidden flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-2 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 transition border border-slate-700">
+          <i class="ph-bold ph-plug-line"></i> Disconnect
+        </button>
+      </div>
+      <div class="flex items-center justify-between pt-0.5 px-0.5">
+        <div class="flex items-center gap-1.5 text-[11px] text-slate-400">
+          <i class="ph-bold ph-shield-check text-cyan-400 text-xs"></i>
+          <span>Pairing:</span>
+          <span id="token-status" class="text-amber-400 font-medium">Unpaired (First connect will prompt TV)</span>
+        </div>
+        <button id="reset-token-btn"
+          class="hidden text-[10px] text-slate-500 hover:text-rose-400 transition underline underline-offset-2">
+          Reset Token
+        </button>
+      </div>
+    </section>
+
+    <!-- Navigation Mode Switcher -->
+    <div class="bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800/80 grid grid-cols-3 gap-1.5 shadow-inner">
+      <button id="mode-dpad-btn"
+        class="py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-glow-cyan">
+        <i class="ph-bold ph-arrows-out-cardinal text-sm"></i> D-Pad
+      </button>
+      <button id="mode-touchpad-btn"
+        class="py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-400 hover:text-slate-200">
+        <i class="ph-bold ph-cursor-click text-sm"></i> Touchpad
+      </button>
+      <button id="mode-keyboard-btn"
+        class="py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-400 hover:text-slate-200">
+        <i class="ph-bold ph-keyboard text-sm"></i> Keyboard
+      </button>
+    </div>
+
+    <!-- MAIN REMOTE CONTROL BODY -->
+    <div
+      class="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 shadow-2xl space-y-5 backdrop-blur-2xl relative">
+
+      <!-- Top Actions: Power, Source, Mute, Numpad Toggle -->
+      <div class="flex items-center justify-between gap-2">
+        <button data-key="KEY_POWER"
+          class="btn-remote w-13 h-13 rounded-2xl bg-gradient-to-b from-red-500 to-red-700 text-white flex items-center justify-center shadow-glow-red border border-red-400/30 p-3"
+          title="Power">
+          <i class="ph-bold ph-power text-2xl"></i>
+        </button>
+
+        <div class="flex items-center gap-2">
+          <button id="toggle-numpad-btn"
+            class="btn-remote w-11 h-11 rounded-2xl bg-slate-800 border border-slate-700/70 text-cyan-400 flex flex-col items-center justify-center shadow-remote-btn"
+            title="Toggle Numpad">
+            <i class="ph-bold ph-hash text-lg"></i>
+          </button>
+          <button data-key="KEY_SOURCE"
+            class="btn-remote w-11 h-11 rounded-2xl bg-slate-800 border border-slate-700/70 text-slate-200 flex flex-col items-center justify-center shadow-remote-btn"
+            title="Source Input">
+            <i class="ph-bold ph-arrow-square-in text-lg text-cyan-400"></i>
+          </button>
+          <button data-key="KEY_MUTE"
+            class="btn-remote w-11 h-11 rounded-2xl bg-slate-800 border border-slate-700/70 text-slate-200 flex flex-col items-center justify-center shadow-remote-btn"
+            title="Mute Toggle">
+            <i class="ph-bold ph-speaker-slash text-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Collapsible Number Pad Grid -->
+      <div id="numpad-container"
+        class="hidden grid-cols-3 gap-2 bg-slate-950/90 p-3 rounded-2xl border border-slate-800 shadow-inner">
+        <button data-key="KEY_1"
+          class="btn-remote py-2.5 rounded-xl bg-slate-800 text-slate-100 font-bold text-sm">1</button>
+        <button data-key="KEY_2"
+          class="btn-remote py-2.5 rounded-xl bg-slate-800 text-slate-100 font-bold text-sm">2</button>
+        <button data-key="KEY_3"
+          class="btn-remote py-2.5 rounded-xl bg-slate-800 text-slate-100 font-bold text-sm">3</button>
+        <button data-key="KEY_4"
+          class="btn-remote py-2.5 rounded-xl bg-slate-800 text-slate-100 font-bold text-sm">4</button>
+        <button data-key="KEY_5"
+          class="btn-remote py-2.5 rounded-xl bg-slate-800 text-slate-100 font-bold text-sm">5</button>
+        <button data-key="KEY_6"
+          class="btn-remote py-2.5 rounded-xl bg-slate-800 text-slate-100 font-bold text-sm">6</button>
+        <button data-key="KEY_7"
+          class="btn-remote py-2.5 rounded-xl bg-slate-800 text-slate-100 font-bold text-sm">7</button>
+        <button data-key="KEY_8"
+          class="btn-remote py-2.5 rounded-xl bg-slate-800 text-slate-100 font-bold text-sm">8</button>
+        <button data-key="KEY_9"
+          class="btn-remote py-2.5 rounded-xl bg-slate-800 text-slate-100 font-bold text-sm">9</button>
+        <button data-key="KEY_PRECH"
+          class="btn-remote py-2.5 rounded-xl bg-slate-900 text-slate-400 text-xs font-semibold uppercase">PRE-CH</button>
+        <button data-key="KEY_0"
+          class="btn-remote py-2.5 rounded-xl bg-slate-800 text-slate-100 font-bold text-sm">0</button>
+        <button data-key="KEY_ENTER"
+          class="btn-remote py-2.5 rounded-xl bg-cyan-950 text-cyan-400 border border-cyan-800/80 font-bold text-xs uppercase">Enter</button>
+      </div>
+
+      <!-- Menu, Home, Guide Row -->
+      <div class="grid grid-cols-3 gap-3">
+        <button data-key="KEY_MENU"
+          class="btn-remote py-2.5 rounded-xl bg-slate-800/90 border border-slate-700/60 text-slate-200 text-xs font-semibold uppercase flex items-center justify-center gap-1.5 shadow-remote-btn">
+          <i class="ph-bold ph-list text-base text-cyan-400"></i> Menu
+        </button>
+        <button data-key="KEY_HOME"
+          class="btn-remote py-2.5 rounded-xl bg-slate-800/90 border border-slate-700/60 text-slate-200 text-xs font-semibold uppercase flex items-center justify-center gap-1.5 shadow-remote-btn">
+          <i class="ph-bold ph-house text-base text-cyan-400"></i> Home
+        </button>
+        <button data-key="KEY_GUIDE"
+          class="btn-remote py-2.5 rounded-xl bg-slate-800/90 border border-slate-700/60 text-slate-200 text-xs font-semibold uppercase flex items-center justify-center gap-1.5 shadow-remote-btn">
+          <i class="ph-bold ph-textbox text-base text-cyan-400"></i> Guide
+        </button>
+      </div>
+
+      <!-- VIEW 1: CLASSIC D-PAD -->
+      <div id="view-dpad" class="flex justify-center my-1 transition-all duration-300">
+        <div
+          class="relative w-56 h-56 rounded-full bg-slate-950/90 border border-slate-800 shadow-inner flex items-center justify-center p-3">
+          <!-- UP -->
+          <button data-key="KEY_UP"
+            class="btn-remote absolute top-2 left-1/2 -translate-x-1/2 w-16 h-12 rounded-t-full bg-slate-800/90 hover:bg-slate-700 text-slate-200 flex items-center justify-center border-t border-x border-slate-700/60 shadow-remote-btn">
+            <i class="ph-bold ph-caret-up text-xl"></i>
+          </button>
+
+          <!-- DOWN -->
+          <button data-key="KEY_DOWN"
+            class="btn-remote absolute bottom-2 left-1/2 -translate-x-1/2 w-16 h-12 rounded-b-full bg-slate-800/90 hover:bg-slate-700 text-slate-200 flex items-center justify-center border-b border-x border-slate-700/60 shadow-remote-btn">
+            <i class="ph-bold ph-caret-down text-xl"></i>
+          </button>
+
+          <!-- LEFT -->
+          <button data-key="KEY_LEFT"
+            class="btn-remote absolute left-2 top-1/2 -translate-y-1/2 w-12 h-16 rounded-l-full bg-slate-800/90 hover:bg-slate-700 text-slate-200 flex items-center justify-center border-l border-y border-slate-700/60 shadow-remote-btn">
+            <i class="ph-bold ph-caret-left text-xl"></i>
+          </button>
+
+          <!-- RIGHT -->
+          <button data-key="KEY_RIGHT"
+            class="btn-remote absolute right-2 top-1/2 -translate-y-1/2 w-12 h-16 rounded-r-full bg-slate-800/90 hover:bg-slate-700 text-slate-200 flex items-center justify-center border-r border-y border-slate-700/60 shadow-remote-btn">
+            <i class="ph-bold ph-caret-right text-xl"></i>
+          </button>
+
+          <!-- OK / ENTER -->
+          <button data-key="KEY_ENTER"
+            class="btn-remote w-20 h-20 rounded-full bg-gradient-to-tr from-slate-800 to-slate-700 text-cyan-400 font-bold text-sm tracking-wider flex flex-col items-center justify-center shadow-lg border border-slate-600/50">
+            <span>OK</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- VIEW 2: INTERACTIVE TOUCHPAD -->
+      <div id="view-touchpad" class="hidden flex-col items-center my-1 transition-all duration-300 space-y-2">
+        <div id="trackpad-container"
+          class="relative w-full h-64 rounded-3xl bg-slate-950/90 border border-slate-800/80 shadow-inner overflow-hidden cursor-crosshair flex items-center justify-center select-none touch-none bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:16px_16px]">
+          <div class="pointer-events-none text-center space-y-1 text-slate-500">
+            <i class="ph-bold ph-cursor text-3xl text-cyan-400 animate-pulse"></i>
+            <p class="text-xs font-semibold text-slate-300">Drag to control TV Mouse Cursor</p>
+            <p class="text-[11px] text-cyan-400 font-medium">Single Tap: Select | 2-Finger Tap: Back</p>
+          </div>
+          <div id="trackpad-pointer"
+            class="absolute w-8 h-8 rounded-full border-2 border-cyan-400 bg-cyan-500/20 shadow-glow-cyan pointer-events-none transform -translate-x-1/2 -translate-y-1/2 scale-0 transition-transform duration-75">
+          </div>
+        </div>
+
+        <div class="w-full grid grid-cols-2 gap-2">
+          <button data-key="KEY_ENTER"
+            class="btn-remote py-2 rounded-xl bg-slate-800/80 border border-slate-700/60 text-cyan-400 text-xs font-semibold flex items-center justify-center gap-1.5 shadow-remote-btn">
+            <i class="ph-bold ph-cursor-click text-sm"></i> Single Tap (Select)
+          </button>
+          <button data-key="KEY_RETURN"
+            class="btn-remote py-2 rounded-xl bg-slate-800/80 border border-slate-700/60 text-slate-300 text-xs font-semibold flex items-center justify-center gap-1.5 shadow-remote-btn">
+            <i class="ph-bold ph-arrow-u-up-left text-sm text-cyan-400"></i> 2-Finger Tap (Back)
+          </button>
+        </div>
+      </div>
+
+      <!-- VIEW 3: KEYBOARD / TEXT INPUT -->
+      <div id="view-keyboard" class="hidden flex-col my-1 transition-all duration-300 space-y-3">
+        <div class="bg-slate-950/90 border border-slate-800/80 p-4 rounded-2xl shadow-inner space-y-3">
+          <label class="block text-xs font-semibold text-slate-400 flex items-center gap-2">
+            <i class="ph-bold ph-keyboard-thin text-cyan-400 text-base"></i> Type Text for TV Search/Inputs
+          </label>
+          <div class="flex gap-2">
+            <input type="text" id="keyboard-input" placeholder="Tap here to bring up virtual keyboard..."
+              autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+              class="flex-1 bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition" />
+            <button id="send-text-btn"
+              class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center justify-center gap-1 shadow-glow-cyan active:scale-95 transition">
+              <i class="ph-bold ph-paper-plane-right text-sm"></i> Send
+            </button>
+          </div>
+          <div class="grid grid-cols-3 gap-2 pt-1">
+            <button id="key-space-btn"
+              class="btn-remote py-2 rounded-xl bg-slate-800 border border-slate-700/60 text-slate-200 text-xs font-medium flex items-center justify-center gap-1 shadow-remote-btn">
+              <i class="ph-bold ph-space text-sm text-cyan-400"></i> Space
+            </button>
+            <button id="key-backspace-btn"
+              class="btn-remote py-2 rounded-xl bg-slate-800 border border-slate-700/60 text-slate-200 text-xs font-medium flex items-center justify-center gap-1 shadow-remote-btn">
+              <i class="ph-bold ph-backspace text-sm text-rose-400"></i> Delete
+            </button>
+            <button id="clear-input-btn"
+              class="btn-remote py-2 rounded-xl bg-slate-800 border border-slate-700/60 text-slate-400 text-xs font-medium flex items-center justify-center gap-1 shadow-remote-btn">
+              <i class="ph-bold ph-trash text-sm"></i> Clear
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Return & Exit Controls -->
+      <div class="flex justify-between items-center px-2">
+        <button data-key="KEY_RETURN"
+          class="btn-remote px-5 py-2.5 rounded-xl bg-slate-800 border border-slate-700/70 text-slate-200 text-xs font-semibold uppercase flex items-center gap-1.5 shadow-remote-btn">
+          <i class="ph-bold ph-arrow-u-up-left text-base text-cyan-400"></i> Back
+        </button>
+        <button data-key="KEY_EXIT"
+          class="btn-remote px-5 py-2.5 rounded-xl bg-slate-800 border border-slate-700/70 text-slate-200 text-xs font-semibold uppercase flex items-center gap-1.5 shadow-remote-btn">
+          <i class="ph-bold ph-x-circle text-base text-rose-400"></i> Exit
+        </button>
+      </div>
+
+      <!-- Volume & Channel Rockers -->
+      <div class="grid grid-cols-2 gap-6 pt-1">
+        <!-- Volume -->
+        <div
+          class="bg-slate-950/70 border border-slate-800 rounded-2xl p-2 flex flex-col items-center justify-between h-36">
+          <button data-key="KEY_VOLUP"
+            class="btn-remote w-full py-2.5 rounded-xl bg-slate-800 text-slate-100 flex items-center justify-center shadow-remote-btn">
+            <i class="ph-bold ph-plus text-lg"></i>
+          </button>
+          <span class="text-[10px] font-bold tracking-widest uppercase text-slate-400 my-1">VOL</span>
+          <button data-key="KEY_VOLDOWN"
+            class="btn-remote w-full py-2.5 rounded-xl bg-slate-800 text-slate-100 flex items-center justify-center shadow-remote-btn">
+            <i class="ph-bold ph-minus text-lg"></i>
+          </button>
+        </div>
+
+        <!-- Channel -->
+        <div
+          class="bg-slate-950/70 border border-slate-800 rounded-2xl p-2 flex flex-col items-center justify-between h-36">
+          <button data-key="KEY_CHUP"
+            class="btn-remote w-full py-2.5 rounded-xl bg-slate-800 text-slate-100 flex items-center justify-center shadow-remote-btn">
+            <i class="ph-bold ph-caret-up text-lg"></i>
+          </button>
+          <span class="text-[10px] font-bold tracking-widest uppercase text-slate-400 my-1">CH</span>
+          <button data-key="KEY_CHDOWN"
+            class="btn-remote w-full py-2.5 rounded-xl bg-slate-800 text-slate-100 flex items-center justify-center shadow-remote-btn">
+            <i class="ph-bold ph-caret-down text-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Media Controls -->
+      <div class="grid grid-cols-4 gap-2 pt-2 border-t border-slate-800/80">
+        <button data-key="KEY_REWIND,KEY_LEFT"
+          class="btn-remote py-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60 text-slate-300 flex items-center justify-center shadow-remote-btn"
+          title="Rewind / Backward">
+          <i class="ph-bold ph-rewind text-base"></i>
+        </button>
+        <button data-key="KEY_PLAY,KEY_PLAYPAUSE"
+          class="btn-remote py-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60 text-cyan-400 flex items-center justify-center shadow-remote-btn"
+          title="Play / Resume">
+          <i class="ph-bold ph-play text-base"></i>
+        </button>
+        <button data-key="KEY_PAUSE,KEY_PLAYPAUSE"
+          class="btn-remote py-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60 text-amber-400 flex items-center justify-center shadow-remote-btn"
+          title="Pause">
+          <i class="ph-bold ph-pause text-base"></i>
+        </button>
+        <button data-key="KEY_FF,KEY_RIGHT"
+          class="btn-remote py-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60 text-slate-300 flex items-center justify-center shadow-remote-btn"
+          title="Fast Forward">
+          <i class="ph-bold ph-fast-forward text-base"></i>
+        </button>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    const STORAGE_IP_KEY = 'samsung_tv_remote_ip';
+    const STORAGE_PORT_KEY = 'samsung_tv_remote_port';
+
+    let socket = null;
+    let isConnected = false;
+
+    // DOM Elements
+    const tvIpInput = document.getElementById('tv-ip');
+    const tvPortSelect = document.getElementById('tv-port');
+    const connectBtn = document.getElementById('connect-btn');
+    const disconnectBtn = document.getElementById('disconnect-btn');
+    const statusBadge = document.getElementById('status-badge');
+    const statusDot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
+
+    const modeDpadBtn = document.getElementById('mode-dpad-btn');
+    const modeTouchpadBtn = document.getElementById('mode-touchpad-btn');
+    const modeKeyboardBtn = document.getElementById('mode-keyboard-btn');
+
+    const viewDpad = document.getElementById('view-dpad');
+    const viewTouchpad = document.getElementById('view-touchpad');
+    const viewKeyboard = document.getElementById('view-keyboard');
+
+    const keyboardInput = document.getElementById('keyboard-input');
+    const sendTextBtn = document.getElementById('send-text-btn');
+    const keySpaceBtn = document.getElementById('key-space-btn');
+    const keyBackspaceBtn = document.getElementById('key-backspace-btn');
+    const clearInputBtn = document.getElementById('clear-input-btn');
+
+    const toggleNumpadBtn = document.getElementById('toggle-numpad-btn');
+    const numpadContainer = document.getElementById('numpad-container');
+
+    const trackpadContainer = document.getElementById('trackpad-container');
+    const trackpadPointer = document.getElementById('trackpad-pointer');
+
+    const tokenStatus = document.getElementById('token-status');
+    const resetTokenBtn = document.getElementById('reset-token-btn');
+
+    function getTokenStorageKey(ip) {
+      return `samsung_tv_token_${(ip || '').replace(/[^a-zA-Z0-9]/g, '_')}`;
+    }
+
+    function updatePairingUI() {
+      const ip = tvIpInput.value.trim();
+      const currentToken = localStorage.getItem(getTokenStorageKey(ip)) || localStorage.getItem('samsung_tv_remote_token');
+      if (currentToken) {
+        tokenStatus.textContent = 'Paired (Token Saved)';
+        tokenStatus.className = 'text-emerald-400 font-medium';
+        resetTokenBtn.classList.remove('hidden');
+      } else {
+        tokenStatus.textContent = 'Unpaired (First connect will prompt TV)';
+        tokenStatus.className = 'text-amber-400 font-medium';
+        resetTokenBtn.classList.add('hidden');
+      }
+    }
+
+    tvIpInput.addEventListener('input', updatePairingUI);
+
+    resetTokenBtn.addEventListener('click', () => {
+      const ip = tvIpInput.value.trim();
+      localStorage.removeItem(getTokenStorageKey(ip));
+      localStorage.removeItem('samsung_tv_remote_token');
+      updatePairingUI();
+      if (socket) socket.close();
+    });
+
+    // Restore saved settings
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedIp = localStorage.getItem(STORAGE_IP_KEY);
+      const savedPort = localStorage.getItem(STORAGE_PORT_KEY);
+      if (savedIp) tvIpInput.value = savedIp;
+      if (savedPort) tvPortSelect.value = savedPort;
+      updatePairingUI();
+    });
+
+    // Connection Status Manager
+    function updateStatus(state) {
+      statusBadge.className = 'inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ';
+
+      if (state === 'connected') {
+        statusBadge.classList.add('bg-emerald-950', 'text-emerald-400', 'border', 'border-emerald-800/60');
+        statusDot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+        statusText.textContent = 'Connected';
+        connectBtn.classList.add('hidden');
+        disconnectBtn.classList.remove('hidden');
+        isConnected = true;
+      } else if (state === 'connecting') {
+        statusBadge.classList.add('bg-amber-950', 'text-amber-400', 'border', 'border-amber-800/60');
+        statusDot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
+        statusText.textContent = 'Connecting...';
+        isConnected = false;
+      } else {
+        statusBadge.classList.add('bg-slate-800', 'text-slate-400', 'border', 'border-slate-700/50');
+        statusDot.className = 'w-2 h-2 rounded-full bg-slate-500';
+        statusText.textContent = 'Offline';
+        connectBtn.classList.remove('hidden');
+        disconnectBtn.classList.add('hidden');
+        isConnected = false;
+      }
+    }
+
+    // Connect to TV WebSocket
+    function connectToTV() {
+      const ip = tvIpInput.value.trim();
+      const port = tvPortSelect.value;
+
+      if (!ip) return;
+
+      localStorage.setItem(STORAGE_IP_KEY, ip);
+      localStorage.setItem(STORAGE_PORT_KEY, port);
+
+      const appNameBase64 = btoa("iOSRemoteApp");
+      const protocol = port === "8002" ? "wss" : "ws";
+      const tokenKey = getTokenStorageKey(ip);
+      const savedToken = localStorage.getItem(tokenKey) || localStorage.getItem('samsung_tv_remote_token');
+
+      let wsUrl = `${protocol}://${ip}:${port}/api/v2/channels/samsung.remote.control?name=${appNameBase64}`;
+      if (savedToken) {
+        wsUrl += `&token=${savedToken}`;
+      }
+
+      updateStatus('connecting');
+
+      try {
+        if (socket) socket.close();
+
+        socket = new WebSocket(wsUrl);
+
+        socket.onopen = () => {
+          updateStatus('connected');
+        };
+
+        socket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            // Samsung TVs return token in data.token or data.clients[0].attributes.token
+            const receivedToken = data?.data?.token
+              || data?.data?.clients?.[0]?.attributes?.token
+              || data?.token;
+            if (receivedToken) {
+              localStorage.setItem(tokenKey, receivedToken);
+              localStorage.setItem('samsung_tv_remote_token', receivedToken);
+              updatePairingUI();
+            }
+          } catch (e) { }
+        };
+
+        socket.onerror = () => {
+          updateStatus('disconnected');
+        };
+
+        socket.onclose = () => {
+          updateStatus('disconnected');
+        };
+
+      } catch (e) {
+        updateStatus('disconnected');
+      }
+    }
+
+    function disconnectTV() {
+      if (socket) socket.close();
+      updateStatus('disconnected');
+    }
+
+    // Command Dispatcher
+    function sendSingleKey(keyName) {
+      const payload = {
+        method: "ms.remote.control",
+        params: {
+          Cmd: "Click",
+          DataOfCmd: keyName,
+          Option: "false",
+          TypeOfRemote: "SendRemoteKey"
+        }
+      };
+
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify(payload));
+      }
+    }
+
+    function sendKeyCommand(keyName) {
+      if ('vibrate' in navigator) {
+        navigator.vibrate(15);
+      }
+
+      if (!socket || socket.readyState !== WebSocket.OPEN) {
+        connectToTV();
+        return;
+      }
+
+      // If keyName contains multiple fallback keys (comma-separated), send them with a slight delay
+      const keys = keyName.split(',').map(k => k.trim()).filter(Boolean);
+      keys.forEach((key, index) => {
+        if (index === 0) {
+          sendSingleKey(key);
+        } else {
+          setTimeout(() => {
+            sendSingleKey(key);
+          }, index * 80);
+        }
+      });
+    }
+
+    function sendMouseMovePayload(dx, dy) {
+      if (!socket || socket.readyState !== WebSocket.OPEN) return;
+      const x = Math.round(dx);
+      const y = Math.round(dy);
+      const timeStr = Date.now().toString();
+
+      // Send ProcessMouseDevice (standard Samsung Smart TV mouse cursor protocol)
+      const mousePayload = {
+        method: "ms.remote.control",
+        params: {
+          Cmd: "Move",
+          Position: { x: x, y: y, Time: timeStr },
+          TypeOfRemote: "ProcessMouseDevice"
+        }
+      };
+      socket.send(JSON.stringify(mousePayload));
+
+      // Also send SendPointerEvent fallback for models expecting pointer event format
+      const pointerPayload = {
+        method: "ms.remote.control",
+        params: {
+          Cmd: "Move",
+          Position: { x: x, y: y, Time: timeStr },
+          TypeOfRemote: "SendPointerEvent"
+        }
+      };
+      socket.send(JSON.stringify(pointerPayload));
+    }
+
+    function sendMouseClickPayload() {
+      if (!socket || socket.readyState !== WebSocket.OPEN) return;
+
+      // 1. Send LeftClick on ProcessMouseDevice
+      socket.send(JSON.stringify({
+        method: "ms.remote.control",
+        params: {
+          Cmd: "LeftClick",
+          TypeOfRemote: "ProcessMouseDevice"
+        }
+      }));
+
+      // 2. Send LeftClick on SendPointerEvent
+      socket.send(JSON.stringify({
+        method: "ms.remote.control",
+        params: {
+          Cmd: "LeftClick",
+          TypeOfRemote: "SendPointerEvent"
+        }
+      }));
+
+      // 3. Fallback: send KEY_ENTER to ensure selection occurs in any TV UI
+      sendSingleKey('KEY_ENTER');
+    }
+
+    // Mode Switcher Controls
+    function setNavMode(mode) {
+      const activeClass = "py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-glow-cyan";
+      const inactiveClass = "py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-400 hover:text-slate-200";
+
+      modeDpadBtn.className = mode === 'dpad' ? activeClass : inactiveClass;
+      modeTouchpadBtn.className = mode === 'touchpad' ? activeClass : inactiveClass;
+      modeKeyboardBtn.className = mode === 'keyboard' ? activeClass : inactiveClass;
+
+      viewDpad.classList.toggle('hidden', mode !== 'dpad');
+      viewDpad.classList.toggle('flex', mode === 'dpad');
+
+      viewTouchpad.classList.toggle('hidden', mode !== 'touchpad');
+      viewTouchpad.classList.toggle('flex', mode === 'touchpad');
+
+      viewKeyboard.classList.toggle('hidden', mode !== 'keyboard');
+      viewKeyboard.classList.toggle('flex', mode === 'keyboard');
+    }
+
+    modeDpadBtn.addEventListener('click', () => setNavMode('dpad'));
+    modeTouchpadBtn.addEventListener('click', () => setNavMode('touchpad'));
+    modeKeyboardBtn.addEventListener('click', () => {
+      setNavMode('keyboard');
+      setTimeout(() => keyboardInput.focus(), 100);
+    });
+
+    // Keyboard Text Handling
+    function sendInputStringToTV(str) {
+      if (!socket || socket.readyState !== WebSocket.OPEN) {
+        connectToTV();
+        return;
+      }
+      try {
+        const encoded = btoa(unescape(encodeURIComponent(str)));
+        const payload = {
+          method: "ms.remote.control",
+          params: {
+            Cmd: encoded,
+            DataOfCmd: "base64",
+            TypeOfRemote: "SendInputString"
+          }
+        };
+        socket.send(JSON.stringify(payload));
+      } catch (e) { }
+    }
+
+    function sendCharacter(char) {
+      if (!char) return;
+      // Send via SendInputString (native text input string)
+      sendInputStringToTV(char);
+
+      // Also send hardware remote key as fallback for app search bars
+      const upper = char.toUpperCase();
+      if (upper >= 'A' && upper <= 'Z') {
+        sendSingleKey(`KEY_${upper}`);
+      } else if (upper >= '0' && upper <= '9') {
+        sendSingleKey(`KEY_${upper}`);
+      } else if (char === ' ') {
+        sendSingleKey('KEY_SPACE');
+      }
+    }
+
+    let previousInputValue = '';
+
+    // Instant real-time typing into TV search bar
+    keyboardInput.addEventListener('input', (e) => {
+      const currentVal = keyboardInput.value;
+
+      if (e.inputType === 'deleteContentBackward') {
+        sendSingleKey('KEY_BACKSPACE');
+      } else if (e.inputType === 'insertText' && e.data) {
+        sendCharacter(e.data);
+      } else if (currentVal.length > previousInputValue.length) {
+        const addedChars = currentVal.slice(previousInputValue.length);
+        for (let i = 0; i < addedChars.length; i++) {
+          setTimeout(() => sendCharacter(addedChars[i]), i * 40);
+        }
+      } else if (currentVal.length < previousInputValue.length) {
+        const diff = previousInputValue.length - currentVal.length;
+        for (let i = 0; i < diff; i++) {
+          setTimeout(() => sendSingleKey('KEY_BACKSPACE'), i * 40);
+        }
+      }
+
+      previousInputValue = currentVal;
+    });
+
+    sendTextBtn.addEventListener('click', () => {
+      const text = keyboardInput.value;
+      if (text) {
+        sendInputStringToTV(text);
+        setTimeout(() => sendSingleKey('KEY_ENTER'), 100);
+      }
+    });
+
+    keyboardInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendSingleKey('KEY_ENTER');
+      } else if (e.key === 'Backspace' && keyboardInput.value === '') {
+        sendSingleKey('KEY_BACKSPACE');
+      }
+    });
+
+    keySpaceBtn.addEventListener('click', () => {
+      keyboardInput.value += ' ';
+      previousInputValue = keyboardInput.value;
+      sendCharacter(' ');
+    });
+
+    keyBackspaceBtn.addEventListener('click', () => {
+      if (keyboardInput.value.length > 0) {
+        keyboardInput.value = keyboardInput.value.slice(0, -1);
+        previousInputValue = keyboardInput.value;
+      }
+      sendSingleKey('KEY_BACKSPACE');
+    });
+
+    clearInputBtn.addEventListener('click', () => {
+      const len = keyboardInput.value.length;
+      keyboardInput.value = '';
+      previousInputValue = '';
+      for (let i = 0; i < Math.min(len, 15); i++) {
+        setTimeout(() => sendSingleKey('KEY_BACKSPACE'), i * 30);
+      }
+    });
+
+    toggleNumpadBtn.addEventListener('click', () => {
+      numpadContainer.classList.toggle('hidden');
+      numpadContainer.classList.toggle('grid');
+    });
+
+    // Touchpad Mouse & Gesture Engine
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchLastX = 0;
+    let touchLastY = 0;
+    let touchStartTime = 0;
+    let maxTouchCount = 0;
+    let totalMoveDistance = 0;
+    let isMouseDown = false;
+
+    const MAX_TAP_DURATION_MS = 320;
+    const MAX_TAP_MOVE_DISTANCE_PX = 15;
+    const MOUSE_ACCELERATION = 2.4;
+
+    function handlePointerDown(clientX, clientY, fingerCount) {
+      maxTouchCount = Math.max(maxTouchCount, fingerCount);
+      touchStartTime = Date.now();
+      totalMoveDistance = 0;
+
+      const rect = trackpadContainer.getBoundingClientRect();
+      touchStartX = clientX - rect.left;
+      touchStartY = clientY - rect.top;
+      touchLastX = touchStartX;
+      touchLastY = touchStartY;
+      isMouseDown = true;
+
+      trackpadPointer.style.left = `${touchStartX}px`;
+      trackpadPointer.style.top = `${touchStartY}px`;
+      trackpadPointer.style.transform = 'translate(-50%, -50%) scale(1)';
+    }
+
+    function handlePointerMove(clientX, clientY) {
+      if (!isMouseDown) return;
+
+      const rect = trackpadContainer.getBoundingClientRect();
+      const currentX = clientX - rect.left;
+      const currentY = clientY - rect.top;
+
+      const deltaX = currentX - touchLastX;
+      const deltaY = currentY - touchLastY;
+
+      touchLastX = currentX;
+      touchLastY = currentY;
+
+      totalMoveDistance += Math.hypot(deltaX, deltaY);
+
+      trackpadPointer.style.left = `${currentX}px`;
+      trackpadPointer.style.top = `${currentY}px`;
+
+      // Move mouse cursor on TV smoothly
+      if (Math.abs(deltaX) > 0.5 || Math.abs(deltaY) > 0.5) {
+        sendMouseMovePayload(deltaX * MOUSE_ACCELERATION, deltaY * MOUSE_ACCELERATION);
+      }
+    }
+
+    function handlePointerUp() {
+      if (!isMouseDown) return;
+      isMouseDown = false;
+      trackpadPointer.style.transform = 'translate(-50%, -50%) scale(0)';
+
+      const duration = Date.now() - touchStartTime;
+
+      // Check for 2-finger tap => Back
+      if (maxTouchCount === 2 && duration < MAX_TAP_DURATION_MS && totalMoveDistance < 35) {
+        sendKeyCommand('KEY_RETURN');
+        maxTouchCount = 0;
+        return;
+      }
+
+      // Check for 1-finger single tap => Select (Mouse LeftClick / OK)
+      if (maxTouchCount === 1 && duration < MAX_TAP_DURATION_MS && totalMoveDistance < MAX_TAP_MOVE_DISTANCE_PX) {
+        sendMouseClickPayload();
+      }
+
+      maxTouchCount = 0;
+    }
+
+    // Touch Event Handlers (Mobile / Tablets)
+    trackpadContainer.addEventListener('touchstart', (e) => {
+      maxTouchCount = e.touches.length;
+      if (e.touches.length > 0) {
+        handlePointerDown(e.touches[0].clientX, e.touches[0].clientY, e.touches.length);
+      }
+    }, { passive: true });
+
+    trackpadContainer.addEventListener('touchmove', (e) => {
+      maxTouchCount = Math.max(maxTouchCount, e.touches.length);
+      if (e.touches.length === 1) {
+        handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+
+    trackpadContainer.addEventListener('touchend', (e) => {
+      handlePointerUp();
+    });
+
+    trackpadContainer.addEventListener('touchcancel', () => {
+      isMouseDown = false;
+      maxTouchCount = 0;
+      trackpadPointer.style.transform = 'translate(-50%, -50%) scale(0)';
+    });
+
+    // Mouse / Desktop Event Handlers
+    trackpadContainer.addEventListener('mousedown', (e) => {
+      handlePointerDown(e.clientX, e.clientY, 1);
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (isMouseDown) {
+        handlePointerMove(e.clientX, e.clientY);
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isMouseDown) {
+        handlePointerUp();
+      }
+    });
+
+    // Remote Key Event Listeners
+    document.querySelectorAll('[data-key]').forEach(button => {
+      button.addEventListener('click', () => {
+        const key = button.getAttribute('data-key');
+        if (key) sendKeyCommand(key);
+      });
+    });
+
+    connectBtn.addEventListener('click', connectToTV);
+    disconnectBtn.addEventListener('click', disconnectTV);
+  </script>
+</body>
+
+</html>
